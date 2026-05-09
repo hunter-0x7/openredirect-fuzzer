@@ -23,6 +23,8 @@ const (
 	colorGreen  = "\033[32m"
 	colorYellow = "\033[33m"
 	colorBlue   = "\033[34m"
+	colorCyan   = "\033[36m"
+	colorMagenta = "\033[35m"
 )
 
 // Result represents a finding
@@ -48,8 +50,8 @@ type Config struct {
 
 // FuzzerStats holds statistics
 type FuzzerStats struct {
-	TotalRequests    int64
-	SuccessfulTests  int64
+	TotalRequests        int64
+	SuccessfulTests      int64
 	VulnerabilitiesFound int64
 }
 
@@ -121,7 +123,7 @@ func main() {
 
 	// Print results
 	fmt.Printf("\n%s[INFO]%s Fuzzing complete!\n", colorBlue, colorReset)
-	fmt.Printf("%s[STATS]%s Total Requests: %d, Vulnerabilities Found: %d\n", 
+	fmt.Printf("%s[STATS]%s Total Requests: %d, Vulnerabilities Found: %d\n",
 		colorBlue, colorReset, atomic.LoadInt64(&stats.TotalRequests), atomic.LoadInt64(&stats.VulnerabilitiesFound))
 
 	// Save results if output file specified
@@ -132,7 +134,7 @@ func main() {
 
 func parseFlags() Config {
 	config := Config{}
-	
+
 	flag.StringVar(&config.PayloadsFile, "payloads", "", "Payloads file (required)")
 	flag.StringVar(&config.PayloadsFile, "p", "", "Payloads file (required) - shorthand")
 	flag.StringVar(&config.URLsFile, "urls", "", "URLs file (optional, reads stdin if not provided)")
@@ -165,12 +167,29 @@ func parseFlags() Config {
 
 func printBanner() {
 	banner := `
-   ╔═══════════════════════════════════════════════════════════╗
-   ║   OpenRedirect Fuzzer v1.0                                ║
-   ║   High-Performance Open Redirect Vulnerability Scanner    ║
-   ╚═══════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   %s  ___  ____  _____ _   __  ____  ___________  ____  ________   %s      ║
+║   %s / _ \/ __ \/ ____/ | / / / __ \/ ____/ / _ \/ __ \/_  __/ /   %s      ║
+║   %s/ // / /_/ / __/ /  |/ / / / / / __/ / / // / /_/ / / / / /    %s      ║
+║   %s/ _  / ____/ /___ / /|  / / /_/ / /___/ / // / _, _/ / / / /____%s      ║
+║   %s/_/ |_/_/   /_____/_/ |_/  \____/_____/_//_/ /_/ |_| /_/_/_____/%s      ║
+║                                                                            ║
+║         %s🔍 High-Performance Open Redirect Vulnerability Scanner 🔍%s     ║
+║                                                                            ║
+║                        %sv1.0 | By Security Research%s                     ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
 `
-	fmt.Println(banner)
+	fmt.Printf(banner,
+		colorCyan, colorReset,
+		colorMagenta, colorReset,
+		colorGreen, colorReset,
+		colorYellow, colorReset,
+		colorRed, colorReset,
+		colorBlue, colorReset,
+		colorCyan, colorReset)
+	fmt.Println()
 }
 
 func loadPayloads(filename string) ([]string, error) {
@@ -250,19 +269,19 @@ func fuzz(urls []string, payloads []string, config Config, bar *progressbar.Prog
 			for w := range workChan {
 				testURL := strings.ReplaceAll(w.url, config.Keyword, w.payload)
 				result := checkRedirect(testURL, w.payload, config)
-				
+
 				bar.Add(1)
 
 				if result.Found {
 					outputMutex.Lock()
-					fmt.Printf("\n%s[FOUND]%s %s redirects to %s\n", 
-						colorGreen, colorReset, result.URL, result.LocationHeader)
+					fmt.Printf("\n%s[✓ FOUND]%s %s %s→%s %s\n",
+						colorGreen, colorReset, result.URL, colorYellow, colorReset, result.LocationHeader)
 					results = append(results, result)
 					atomic.AddInt64(&stats.VulnerabilitiesFound, 1)
 					outputMutex.Unlock()
 				} else if config.Verbose {
 					outputMutex.Lock()
-					fmt.Printf("\n%s[TESTING]%s %s\n", colorYellow, colorReset, testURL)
+					fmt.Printf("\n%s[→ TESTING]%s %s\n", colorYellow, colorReset, testURL)
 					outputMutex.Unlock()
 				}
 
@@ -303,7 +322,7 @@ func checkRedirect(targetURL string, payload string, config Config) Result {
 	req, err := http.NewRequest(config.Method, targetURL, nil)
 	if err != nil {
 		if config.Verbose {
-			fmt.Fprintf(os.Stderr, "%s[ERROR]%s Failed to create request: %v\n", colorRed, colorReset, err)
+			fmt.Fprintf(os.Stderr, "%s[✗ ERROR]%s Failed to create request: %v\n", colorRed, colorReset, err)
 		}
 		return result
 	}
@@ -314,7 +333,7 @@ func checkRedirect(targetURL string, payload string, config Config) Result {
 	resp, err := client.Do(req)
 	if err != nil {
 		if config.Verbose {
-			fmt.Fprintf(os.Stderr, "%s[ERROR]%s Request failed: %v\n", colorRed, colorReset, err)
+			fmt.Fprintf(os.Stderr, "%s[✗ ERROR]%s Request failed: %v\n", colorRed, colorReset, err)
 		}
 		return result
 	}
@@ -368,19 +387,19 @@ func isExternalRedirect(originalURL, redirectLocation string) bool {
 func saveResults(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s[ERROR]%s Failed to create output file: %v\n", colorRed, colorReset, err)
+		fmt.Fprintf(os.Stderr, "%s[✗ ERROR]%s Failed to create output file: %v\n", colorRed, colorReset, err)
 		return err
 	}
 	defer file.Close()
 
 	for _, result := range results {
-		line := fmt.Sprintf("[FOUND] %s (Payload: %s) redirects to %s\n", 
+		line := fmt.Sprintf("[FOUND] %s (Payload: %s) redirects to %s\n",
 			result.URL, result.Payload, result.LocationHeader)
 		if _, err := io.WriteString(file, line); err != nil {
 			return err
 		}
 	}
 
-	fmt.Printf("%s[INFO]%s Results saved to %s\n", colorBlue, colorReset, filename)
+	fmt.Printf("%s[✓ INFO]%s Results saved to %s\n", colorBlue, colorReset, filename)
 	return nil
 }
