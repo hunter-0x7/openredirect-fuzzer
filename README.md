@@ -40,6 +40,13 @@ go build -o openredirect-fuzzer .
 cat urls.txt | ./openredirect-fuzzer -p payloads.txt
 ```
 
+## Payload corpus (safe authorized testing)
+
+`payloads.txt` is intentionally a concise, categorized corpus for authorized validation only.  
+It focuses on redirect behavior and URL parser/canonicalization correctness (absolute/protocol-relative URLs, relative controls, encoding, normalization, authority parsing, dangerous-scheme classification inputs, and malformed values).
+
+To avoid abusive targeting content, the corpus uses reserved documentation domains (`redirect.test`, `example.invalid`, `trusted.invalid`) and excludes phishing, credential-theft, XSS/SSRF/CSRF chains, metadata-service, local-network, and bypass-claim payloads.
+
 ## Flags
 
 Existing flags are preserved:
