@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -262,5 +263,69 @@ func TestValidateConfigRejectsInvalidMethod(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unsupported method") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestPayloadCorpusSafetyAndUniqueness(t *testing.T) {
+	t.Parallel()
+
+	payloads, err := loadPayloads("payloads.txt")
+	if err != nil {
+		t.Fatalf("loadPayloads() error = %v", err)
+	}
+	if len(payloads) == 0 {
+		t.Fatalf("payload corpus is empty")
+	}
+
+	required := []string{
+		"https://redirect.test/",
+		"http://redirect.test/",
+		"//redirect.test/",
+		"/",
+		"https%3A%2F%2Fredirect.test%2F",
+		"https://REDIRECT.TEST/",
+		"https://redirect.test./",
+		"https://redirect.test:443/",
+		"https://user@redirect.test/",
+		"javascript:alert(1)",
+		"data:text/plain,redirect-test",
+		"file:///tmp/redirect-test",
+		"ftp://redirect.test/resource",
+		"https://",
+	}
+	for _, p := range required {
+		if !slices.Contains(payloads, p) {
+			t.Fatalf("missing required payload %q", p)
+		}
+	}
+
+	seen := make(map[string]struct{}, len(payloads))
+	for _, payload := range payloads {
+		trimmed := strings.TrimSpace(payload)
+		if payload != trimmed {
+			t.Fatalf("payload has unexpected surrounding whitespace: %q", payload)
+		}
+		if _, ok := seen[payload]; ok {
+			t.Fatalf("duplicate payload detected: %q", payload)
+		}
+		seen[payload] = struct{}{}
+	}
+
+	forbiddenSubstrings := []string{
+		"attacker.com",
+		"evil.com",
+		"phishing",
+		"169.254.169.254",
+		"127.0.0.1",
+		"localhost",
+		"<script>",
+	}
+	for _, payload := range payloads {
+		lower := strings.ToLower(payload)
+		for _, forbidden := range forbiddenSubstrings {
+			if strings.Contains(lower, forbidden) {
+				t.Fatalf("payload contains forbidden content %q: %q", forbidden, payload)
+			}
+		}
 	}
 }
