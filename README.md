@@ -1,145 +1,138 @@
 # OpenRedirect Fuzzer
 
-A high-performance, concurrent open redirect vulnerability fuzzer written in Go.
+A concurrent open-redirect scanner for **authorized security testing**.
 
-## Features
+> ⚠️ **Authorized use only**: only scan systems you own or are explicitly permitted to test.
 
-✅ **High Performance**
-- Concurrent goroutines for parallel testing
-- Connection pooling and efficient resource usage
-- Progress bar for real-time status
+## What it does
 
-✅ **Flexible Input**
-- Accept URLs from file or stdin
-- Load custom payloads from wordlist file
-- Customizable keyword replacement
+- Reads URL templates from file or stdin.
+- Reads payloads from file.
+- Replaces a keyword (`FUZZ` by default) with each payload.
+- Sends concurrent HTTP requests with redirect following disabled.
+- Classifies redirects accurately instead of treating every 3xx as vulnerable.
 
-✅ **Accurate Detection**
-- HTTP redirect detection via status codes (3xx)
-- Location header verification
-- Network error handling
+## Key improvements
 
-✅ **Professional CLI**
-- Multiple command-line flags for customization
-- Verbose mode for debugging
-- Optional output file for results
+- Reusable HTTP client/transport (no per-request client creation).
+- Redirect classification with normalized host comparison:
+  - Resolves relative and protocol-relative `Location` values.
+  - Normalizes host case and default ports (`:80`, `:443`) before comparison.
+  - Distinguishes same-origin/same-host redirects from external redirects.
+- Dangerous schemes (`javascript:`, `data:`, `file:`) are marked suspicious.
+- Optional HEAD→GET fallback when HEAD is rejected (403/405/501).
+- Input deduplication (URLs and payloads).
+- Signal-aware cancellation (`SIGINT`, `SIGTERM`).
+- Structured JSON output with metadata, while preserving text output.
+- Scanner buffer increased for long lines, with scanner errors surfaced.
 
-## Installation
-
-### Prerequisites
-- Go 1.21 or higher
-
-### Build
+## Build
 
 ```bash
-git clone https://github.com/hunter-0x7/openredirect-fuzzer.git
-cd openredirect-fuzzer
 go mod download
-go build -o openredirect-fuzzer
+go build -o openredirect-fuzzer .
 ```
 
 ## Usage
 
-### Basic Usage
+```bash
+./openredirect-fuzzer -p payloads.txt -u urls.txt
+cat urls.txt | ./openredirect-fuzzer -p payloads.txt
+```
+
+## Flags
+
+Existing flags are preserved:
+
+- `-payloads, -p` payload file (required)
+- `-urls, -u` URL templates file (optional; stdin if omitted)
+- `-keyword, -k` replacement keyword (default `FUZZ`)
+- `-concurrency, -c` worker count (default `100`)
+- `-timeout, -t` request timeout as **Go duration** (default `10s`, examples: `5s`, `1m`)
+- `-output, -o` output file path
+- `-method, -m` request method (`HEAD`, `GET`, `POST`; default `HEAD`)
+- `-verbose, -v` verbose logging
+
+Additional flags:
+
+- `-user-agent` custom User-Agent (default `OpenRedirectFuzzer/2.0`)
+- `-head-fallback` fallback to GET when HEAD is rejected (`true` by default)
+- `-format` output format: `auto`, `text`, `json` (default `auto`)
+  - `auto` uses JSON when output filename ends in `.json`, otherwise text.
+
+## Examples
 
 ```bash
-# Read URLs from file, use custom payloads
-./openredirect-fuzzer -payloads payloads.txt -urls urls.txt
-
-# Read URLs from stdin
-cat urls.txt | ./openredirect-fuzzer -payloads payloads.txt
-```
-
-### Command-Line Flags
-
-```
--payloads, -p       Input file with payloads (required)
--urls, -u           Input file with URLs (optional, reads stdin if not provided)
--keyword, -k        Keyword to replace in URLs (default: "FUZZ")
--concurrency, -c    Number of concurrent workers (default: 100)
--timeout, -t        Request timeout in seconds (default: 10)
--output, -o         Output file for results (optional)
--method, -m         HTTP method: HEAD/GET/POST (default: HEAD)
--verbose, -v        Enable verbose logging
-```
-
-### Examples
-
-```bash
-# Basic fuzzing with custom payloads
+# Basic scan
 ./openredirect-fuzzer -p payloads.txt -u urls.txt
 
-# Read from stdin with 50 workers
-cat urls.txt | ./openredirect-fuzzer -p payloads.txt -c 50
+# Faster scan with custom timeout
+./openredirect-fuzzer -p payloads.txt -u urls.txt -c 200 -t 5s
 
-# Save results to file
-./openredirect-fuzzer -p payloads.txt -u urls.txt -o results.txt
+# Force GET requests
+./openredirect-fuzzer -p payloads.txt -u urls.txt -m GET
 
-# Verbose mode with custom timeout
-./openredirect-fuzzer -p payloads.txt -u urls.txt -t 15 -v
+# Save text output
+./openredirect-fuzzer -p payloads.txt -u urls.txt -o findings.txt
 
-# Using GET method with custom keyword
-./openredirect-fuzzer -p payloads.txt -u urls.txt -m GET -k PAYLOAD
-```
-
-## Input File Formats
-
-### Payloads File
-One payload per line. Lines starting with `#` are treated as comments and ignored.
-
-Example `payloads.txt`:
-```
-//example.com
-//google.com
-https://example.com
-/https://google.com
-//google.com/%2f..
-```
-
-### URLs File
-One URL per line. The keyword (default: `FUZZ`) will be replaced with each payload.
-
-Example `urls.txt`:
-```
-http://example.com/redirect?url=FUZZ
-http://example.com/login?return=FUZZ
-http://example.com/page?redirect_uri=FUZZ
+# Save JSON output
+./openredirect-fuzzer -p payloads.txt -u urls.txt -o findings.json
+# or
+./openredirect-fuzzer -p payloads.txt -u urls.txt -o findings.out -format json
 ```
 
 ## Output
 
-The tool will output detected redirects in the following format:
+### Text format
 
+Preserves the traditional line-oriented format for findings:
+
+```text
+[FOUND] https://target.example/redirect?next=//evil.example (Payload: //evil.example) redirects to //evil.example [external-http-redirect]
 ```
-[FOUND] http://example.com/redirect?url=//google.com redirects to //google.com
+
+Errors are also recorded:
+
+```text
+[ERROR] https://target.example/... (Payload: ...) <request error>
 ```
 
-If `-output` flag is specified, results will also be saved to the output file.
+### JSON format
 
-## Performance Tips
+JSON includes summary and per-request metadata:
 
-- **Increase concurrency**: Use `-c 200` or higher for faster testing (adjust based on system resources)
-- **Reduce timeout**: Use `-t 5` for faster response handling, but may miss slow servers
-- **Use HEAD method**: Default HEAD is faster than GET/POST
+- `timestamp`
+- `template_url`
+- `url`
+- `payload`
+- `method`
+- `fallback_used`
+- `status_code`
+- `location_header` (raw)
+- `effective_location` (resolved)
+- `classification`
+- `reason`
+- `external`
+- `found`
+- `error`
 
-## Error Handling
+## Classification behavior
 
-The tool gracefully handles:
-- Network timeouts
-- Connection errors
-- Invalid URLs
-- Malformed responses
+A result is only marked as a finding when redirect behavior is suspicious, such as:
 
-Errors are logged to stderr and don't stop the fuzzing process.
+- external HTTP(S) host redirect
+- dangerous non-HTTP(S) redirect schemes (`javascript`, `data`, `file`)
+
+Same-origin and same-host redirects are not reported as vulnerabilities.
+
+Malformed `Location` values are handled safely and classified without crashing.
+
+## Limitations
+
+- The scanner inspects the first response only (redirect following disabled by design).
+- It does not execute JavaScript or browser-level redirect logic.
+- Rate limiting is not built in; use concurrency and timeout controls responsibly.
 
 ## License
 
 MIT
-
-## Author
-
-Created with ❤️ for security research
-
----
-
-**Disclaimer**: This tool is for authorized security testing only. Unauthorized access to computer systems is illegal. Always obtain proper authorization before testing.
